@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getCoinsNew } from "@zoralabs/coins-sdk";
+import {
+  getCoinsNew,
+  getCoinsTopVolume24h,
+  getCoinsTopGainers,
+} from "@zoralabs/coins-sdk";
 import { Token } from "@/utils/coins";
 
 type EdgeNode = {
@@ -72,7 +76,8 @@ export async function GET(request: Request) {
   console.log("Search Params:", searchParams);
   const limit = parseInt(searchParams.get("limit") || "1");
   const after = searchParams.get("after") || undefined;
-  console.log(after, "after");
+  const type = searchParams.get("type") || "new"; // new, top-volume, top-gainers
+  console.log(after, "after", type, "type");
 
   try {
     let zora20Tokens: Token[] = [];
@@ -86,10 +91,24 @@ export async function GET(request: Request) {
 
       const response = await retryWithBackoff(
         async () => {
-          return await getCoinsNew({
-            count: limit - zora20Tokens.length,
-            after: paginationCursor,
-          });
+          switch (type) {
+            case "top-volume":
+              return await getCoinsTopVolume24h({
+                count: limit - zora20Tokens.length,
+                after: paginationCursor,
+              });
+            case "top-gainers":
+              return await getCoinsTopGainers({
+                count: limit - zora20Tokens.length,
+                after: paginationCursor,
+              });
+            case "new":
+            default:
+              return await getCoinsNew({
+                count: limit - zora20Tokens.length,
+                after: paginationCursor,
+              });
+          }
         },
         2,
         2000
