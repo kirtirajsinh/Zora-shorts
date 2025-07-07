@@ -197,8 +197,8 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
               isActive={
                 idx === currentCoinIndex && !isLoading && !isTransitioning
               }
-              marketCapDelta24h={String(token.marketCapDelta24h || "0")}
               marketCap={String(token.marketCap || "0")}
+              marketCapDelta24h={String(token.marketCapDelta24h || "0")}
               uniqueHolders={token.uniqueHolders || 0}
               creator={token.creator}
               description={token.description}
