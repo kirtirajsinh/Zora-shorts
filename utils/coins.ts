@@ -11,6 +11,7 @@ export type Token = {
     };
     volume24h?: number;
     marketCapDelta24h?: string;
+    marketCap?: string;
     uniqueHolders?: number;
     transfers?: { count: number };
     totalVolume?: number;
