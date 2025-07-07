@@ -107,6 +107,31 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     return n.toFixed(1);
   }, []);
 
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${window.location.origin}/token/${tokenAddress}`;
+    const shareData = {
+      title: `${name} (${symbol}) | Zeero`,
+      text: `Check out ${name} on Zeero - Market Cap: $${formatNumber(marketCap)}`,
+      url: shareUrl,
+    };
+
+    try {
+      // Check if Web Share API is supported
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        // You could add a toast notification here
+        console.log('Share URL copied to clipboard:', shareUrl);
+      }
+    } catch (error) {
+      // If clipboard also fails, fallback to just logging the URL
+      console.error('Share failed:', error);
+      console.log('Share URL:', shareUrl);
+    }
+  }, [tokenAddress, name, symbol, marketCap, formatNumber]);
+
   const videoUrl = useMemo(() => {
     if (!media?.originalUri) return "";
     return getAlternativeIPFSUrl(media.originalUri, currentGatewayIndex);
@@ -394,9 +419,21 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              handleShare();
+            }}
+            className="mt-2 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+            </svg>
+            Share
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
               setIsBuyDrawerOpen(true);
             }}
-            className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="mt-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             Buy
           </button>
@@ -522,9 +559,21 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              handleShare();
+            }}
+            className="mt-2 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+            </svg>
+            Share
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
               setIsBuyDrawerOpen(true);
             }}
-            className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="mt-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             Buy
           </button>
