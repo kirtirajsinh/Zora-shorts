@@ -22,10 +22,10 @@ export async function generateMetadata() {
   const logoUrl = process.env.NEXT_PUBLIC_LOGO;
   return {
     title: "Zeero",
-    description: "Creators from  Zeero to Million  ",
+    description: "Creators from  Zeero to Millionaire",
     openGraph: {
       title: `Zeero`,
-      description: `Creators from  Zeero to Million`,
+      description: `Creators from  Zeero to Millionaire`,
 
       images: [
         {
