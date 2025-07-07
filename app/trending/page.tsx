@@ -3,15 +3,35 @@ import { TrendingProvider } from "@/components/TrendingProvider";
 
 export default async function TrendingPage() {
   // Fetch both top gainers and top volume tokens server-side
-  const [gainersResponse, volumeResponse] = await Promise.all([
-    fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/coins?limit=100&type=top-gainers`
-    ),
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/coins?limit=100&type=top-volume`),
-  ]);
+  let gainersData, volumeData;
+  
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
+    const [gainersResponse, volumeResponse] = await Promise.all([
+      fetch(
+        `${baseUrl}/api/coins?limit=100&type=top-gainers`,
+        { cache: 'no-store' }
+      ),
+      fetch(
+        `${baseUrl}/api/coins?limit=100&type=top-volume`,
+        { cache: 'no-store' }
+      ),
+    ]);
 
-  const gainersData = await gainersResponse.json();
-  const volumeData = await volumeResponse.json();
+    if (!gainersResponse.ok || !volumeResponse.ok) {
+      throw new Error('Failed to fetch data');
+    }
+
+    gainersData = await gainersResponse.json();
+    volumeData = await volumeResponse.json();
+  } catch (error) {
+    console.error('Failed to fetch trending data:', error);
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
   // Filter tokens with media content
   const gainersWithMedia = gainersData.zora20Tokens.filter(

@@ -3,22 +3,22 @@ import { Token } from "@/utils/coins";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-interface TokenPageProps {
-  params: {
-    address: string;
-  };
-}
+// NEW: Define a complete props type for Next.js 15+
+type Props = {
+  params: Promise<{ address: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 async function getToken(address: string): Promise<Token | null> {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:3000";
     const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/token/${address}`,
+      `${baseUrl}/api/token/${address}`,
       { cache: "no-store" }
     );
 
     if (!response.ok) {
+      console.error(`Failed to fetch token: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -30,11 +30,12 @@ async function getToken(address: string): Promise<Token | null> {
   }
 }
 
-export async function generateMetadata({
-  params,
-}: TokenPageProps): Promise<Metadata> {
-  const token = await getToken(params.address);
+// USE THE NEW PROPS TYPE
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { address } = await params;
+  const token = await getToken(address);
 
+  // ... (rest of the function is fine, no changes needed here)
   if (!token) {
     return {
       title: "Token Not Found | Zeero",
@@ -80,8 +81,10 @@ export async function generateMetadata({
   };
 }
 
-export default async function TokenPage({ params }: TokenPageProps) {
-  const token = await getToken(params.address);
+// USE THE NEW PROPS TYPE
+export default async function TokenPage({ params }: Props) {
+  const { address } = await params;
+  const token = await getToken(address);
 
   if (!token) {
     notFound();
@@ -89,7 +92,7 @@ export default async function TokenPage({ params }: TokenPageProps) {
 
   return (
     <div className="h-full w-full relative overflow-hidden bg-black cursor-pointer">
-      <div className="absolute top-0 left-0 w-full bottom-16">
+      <div className="absolute top-0 left-0 w-full h-full">
         <MediaCard
           id={token.id}
           media={token.mediaContent}
