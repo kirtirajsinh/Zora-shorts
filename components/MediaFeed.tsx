@@ -3,24 +3,44 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MediaCard } from "./MediaCard";
 import { Token } from "@/utils/coins";
-import { useCoinsStore } from "@/store/useCoin";
+import {
+  useCoinsStore,
+  useNewCoinsStore,
+  useTopVolumeCoinsStore,
+  useTopGainersCoinsStore,
+} from "@/store/useCoin";
 import LoadingCard from "./LoadingCard";
 
 type MediaFeedProps = {
   tokens: Token[];
   pagination: string;
+  coinType?: "new" | "top-volume" | "top-gainers";
 };
 
 export const MediaFeed: React.FC<MediaFeedProps> = ({
   tokens: initialTokens,
   pagination,
+  coinType = "top-volume",
 }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastScrollTime = useRef(0);
-  const scrollCooldown = 500; // Cooldown period in ms
+  const scrollCooldown = 800; // Longer cooldown to prevent multiple scrolls
 
   // console.log(initialTokens, "initialTokens");
+
+  // Select appropriate store based on coin type
+  const getStore = () => {
+    switch (coinType) {
+      case "top-volume":
+        return useTopVolumeCoinsStore();
+      case "top-gainers":
+        return useTopGainersCoinsStore();
+      case "new":
+      default:
+        return useNewCoinsStore();
+    }
+  };
 
   const {
     setCoins,
@@ -29,16 +49,23 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
     updateCurrentCoinIndex,
     currentCoinIndex,
     coins,
-  } = useCoinsStore();
+  } = getStore();
 
   // Initialize store only once
   useEffect(() => {
     if (coins.length === 0 && initialTokens.length > 0) {
-      console.log("Initializing coins store");
+      console.log("Initializing coins store for type:", coinType);
       setCoins(initialTokens);
       setPagination(pagination);
     }
-  }, [initialTokens, pagination, setCoins, setPagination, coins.length]);
+  }, [
+    initialTokens,
+    pagination,
+    setCoins,
+    setPagination,
+    coinType,
+    coins.length,
+  ]);
 
   const handleNavigation = useCallback(
     async (direction: "up" | "down") => {
@@ -74,7 +101,7 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
       e.preventDefault();
 
       const { deltaY } = e;
-      if (Math.abs(deltaY) < 50) return; // Higher threshold for better control
+      if (Math.abs(deltaY) < 100) return; // Much higher threshold to prevent multiple scrolls
 
       const direction = deltaY > 0 ? "up" : "down";
       handleNavigation(direction);
@@ -96,7 +123,7 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
       const deltaTime = touchEndTime - touchStartTime;
 
       // Only trigger if swipe is fast enough and long enough
-      if (Math.abs(deltaY) > 80 && deltaTime < 300) {
+      if (Math.abs(deltaY) > 120 && deltaTime < 400) {
         const direction = deltaY > 0 ? "up" : "down";
         handleNavigation(direction);
       }
@@ -170,10 +197,9 @@ export const MediaFeed: React.FC<MediaFeedProps> = ({
               isActive={
                 idx === currentCoinIndex && !isLoading && !isTransitioning
               }
-              volume24h={String(token.volume24h || token.totalVolume || "0")}
               marketCapDelta24h={String(token.marketCapDelta24h || "0")}
+              marketCap={String(token.marketCap || "0")}
               uniqueHolders={token.uniqueHolders || 0}
-              transfers={token.transfers?.count || 0}
               creator={token.creator}
               description={token.description}
               symbol={token.symbol}
