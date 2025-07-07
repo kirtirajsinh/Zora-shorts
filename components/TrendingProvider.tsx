@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useTopGainersCoinsStore, useTopVolumeCoinsStore } from "@/store/useCoin";
+import {
+  useTopGainersCoinsStore,
+  useTopVolumeCoinsStore,
+} from "@/store/useCoin";
 import { Token } from "@/utils/coins";
 
 type TrendingProviderProps = {
@@ -15,9 +18,7 @@ type TrendingProviderProps = {
 export const TrendingProvider: React.FC<TrendingProviderProps> = ({
   children,
   initialGainers,
-  initialVolume,
   gainersPagination,
-  volumePagination,
 }) => {
   const gainersStore = useTopGainersCoinsStore();
   const volumeStore = useTopVolumeCoinsStore();
@@ -28,12 +29,7 @@ export const TrendingProvider: React.FC<TrendingProviderProps> = ({
       gainersStore.setCoins(initialGainers);
       gainersStore.setPagination(gainersPagination || null);
     }
-
-    if (volumeStore.coins.length === 0 && initialVolume.length > 0) {
-      volumeStore.setCoins(initialVolume);
-      volumeStore.setPagination(volumePagination || null);
-    }
-  }, [initialGainers, initialVolume, gainersPagination, volumePagination, gainersStore, volumeStore]);
+  }, [initialGainers, gainersPagination, gainersStore]);
 
   return <>{children}</>;
 };
