@@ -84,7 +84,7 @@ export default function RootLayout({
               */}
             <main className="flex-grow relative ">{children}</main>
             {/* Nav will be at the bottom of the flex-col container */}
-            <div className="fixed max-w-[420px] mx-auto bottom-0 left-0 right-0">
+            <div className="fixed max-w-[420px] mx-auto bottom-0 left-0 right-0 z-50">
               <Nav />
             </div>
             <Toaster />
