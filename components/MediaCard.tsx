@@ -8,6 +8,8 @@ import React, {
   useMemo,
 } from "react";
 import { BuyDrawer } from "./BuyDrawer";
+import { useMiniAppStore } from "@/store/useMiniAppStore";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 // ... (Type definitions and helper functions remain the same)
 type MediaContent = {
@@ -98,6 +100,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [shouldPreload, setShouldPreload] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { isInMiniApp } = useMiniAppStore();
 
   const formatNumber = useCallback((num: string) => {
     const n = parseFloat(num);
@@ -109,28 +112,56 @@ export const MediaCard: React.FC<MediaCardProps> = ({
 
   const handleShare = useCallback(async () => {
     const shareUrl = `${window.location.origin}/token/${tokenAddress}`;
-    const shareData = {
-      title: `${name} (${symbol}) | Zeero`,
-      text: `Check out ${name} on Zeero - Market Cap: $${formatNumber(marketCap)}`,
-      url: shareUrl,
-    };
+    
+    if (isInMiniApp) {
+      // Use Farcaster sharing in Mini App
+      try {
+        const embedData = {
+          version: "1",
+          imageUrl: media.previewImage?.medium || media.previewImage?.small || `${window.location.origin}/api/og/token/${tokenAddress}`,
+          button: {
+            title: `🎬 ${name}`,
+            action: {
+              type: "launch_miniapp" as const,
+              url: shareUrl,
+              name: "Zeero",
+              splashImageUrl: `${window.location.origin}/logo.png`,
+              splashBackgroundColor: "#000000"
+            }
+          }
+        };
 
-    try {
-      // Check if Web Share API is supported
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
+        // Create cast text
+        const castText = `Check out ${name} (${symbol}) on Zeero!\n\nMarket Cap: $${formatNumber(marketCap)}\n24h Change: ${parseFloat(marketCapDelta24h) >= 0 ? '+' : ''}${formatNumber(marketCapDelta24h)}%\n\n${shareUrl}`;
+
+        await sdk.actions.openUrl(`https://warpcast.com/~/compose?text=${encodeURIComponent(castText)}&embeds[]=${encodeURIComponent(shareUrl)}`);
+      } catch (error) {
+        console.error("Farcaster share failed:", error);
         // Fallback to clipboard
         await navigator.clipboard.writeText(shareUrl);
-        // You could add a toast notification here
-        console.log('Share URL copied to clipboard:', shareUrl);
+        console.log("Share URL copied to clipboard:", shareUrl);
       }
-    } catch (error) {
-      // If clipboard also fails, fallback to just logging the URL
-      console.error('Share failed:', error);
-      console.log('Share URL:', shareUrl);
+    } else {
+      // Use regular Web Share API outside Mini App
+      const shareData = {
+        title: `${name} (${symbol}) | Zeero`,
+        text: `Check out ${name} on Zeero - Market Cap: $${formatNumber(marketCap)}`,
+        url: shareUrl,
+      };
+
+      try {
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          console.log("Share URL copied to clipboard:", shareUrl);
+        }
+      } catch (error) {
+        console.error("Share failed:", error);
+        console.log("Share URL:", shareUrl);
+      }
     }
-  }, [tokenAddress, name, symbol, marketCap, formatNumber]);
+  }, [tokenAddress, name, symbol, marketCap, formatNumber, isInMiniApp, media.previewImage, marketCapDelta24h]);
 
   const videoUrl = useMemo(() => {
     if (!media?.originalUri) return "";
@@ -178,7 +209,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     const video = videoRef.current;
     const progressBar = progressBarRef.current;
     if (video && progressBar && video.duration > 0) {
-      const progress = Math.min((video.currentTime / video.duration) * 100, 100);
+      const progress = Math.min(
+        (video.currentTime / video.duration) * 100,
+        100
+      );
       progressBar.style.width = `${progress}%`;
     }
   }, []);
@@ -332,10 +366,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             muted
             preload="metadata"
             poster={media.previewImage?.medium || media.previewImage?.small}
-            style={{ 
+            style={{
               backfaceVisibility: "hidden",
               transform: "translateZ(0)",
-              willChange: "transform"
+              willChange: "transform",
             }}
             disablePictureInPicture
             controlsList="nodownload noplaybackrate"
@@ -344,7 +378,9 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           <div className="w-full h-full flex items-center justify-center bg-gray-900">
             {media.previewImage?.medium || media.previewImage?.small ? (
               <Image
-                src={media.previewImage.medium || media.previewImage.small || ""}
+                src={
+                  media.previewImage.medium || media.previewImage.small || ""
+                }
                 alt={name}
                 fill
                 style={{ objectFit: "contain" }}
@@ -352,7 +388,11 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               />
             ) : (
               <div className="animate-pulse w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -424,7 +464,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             className="mt-2 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
             </svg>
             Share
           </button>
@@ -521,21 +561,33 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     return (
       <div className="media-card absolute inset-0 flex items-center justify-center bg-black rounded-2xl overflow-hidden">
         <Image
-          src={media.originalUri.startsWith("ipfs://") ? `https://ipfs.io/ipfs/${media.originalUri.replace("ipfs://", "")}` : media.originalUri}
+          src={
+            media.originalUri.startsWith("ipfs://")
+              ? `https://ipfs.io/ipfs/${media.originalUri.replace(
+                  "ipfs://",
+                  ""
+                )}`
+              : media.originalUri
+          }
           alt={name}
           fill
           style={{ objectFit: "contain" }}
           priority={isActive}
         />
-        
+
         {/* Stats sidebar for images */}
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-10">
           <div className="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
             <div className="text-xs text-white/60">24h Change</div>
-            <div className={`text-base font-medium ${
-              parseFloat(marketCapDelta24h) >= 0 ? "text-green-400" : "text-red-400"
-            }`}>
-              {parseFloat(marketCapDelta24h) >= 0 ? "+" : ""}{formatNumber(marketCapDelta24h)}%
+            <div
+              className={`text-base font-medium ${
+                parseFloat(marketCapDelta24h) >= 0
+                  ? "text-green-400"
+                  : "text-red-400"
+              }`}
+            >
+              {parseFloat(marketCapDelta24h) >= 0 ? "+" : ""}
+              {formatNumber(marketCapDelta24h)}%
             </div>
           </div>
           <div className="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
@@ -564,7 +616,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             className="mt-2 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
             </svg>
             Share
           </button>
@@ -584,7 +636,9 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-full overflow-hidden bg-white/10">
               <Image
-                src={creator?.avatar?.previewImage?.small || "/default-avatar.png"}
+                src={
+                  creator?.avatar?.previewImage?.small || "/default-avatar.png"
+                }
                 alt={creator?.handle || "Creator"}
                 width={32}
                 height={32}
