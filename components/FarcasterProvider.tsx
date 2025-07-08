@@ -86,8 +86,8 @@ const queryClient = new QueryClient();
 export const config = createConfig({
   chains: [base, baseSepolia],
   transports: {
-    [base.id]: http(process.env.NEXT_PUBLIC_BASE_ENDPOINT),
     [baseSepolia.id]: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_ENDPOINT),
+    [base.id]: http(process.env.NEXT_PUBLIC_BASE_ENDPOINT),
   },
   connectors: [miniAppConnector(), injected()],
 });
