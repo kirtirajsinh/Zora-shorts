@@ -1,27 +1,29 @@
 export async function GET() {
   const appUrl = process.env.NEXT_PUBLIC_URL;
-  const roomId = process.env.NEXT_PUBLIC_ROOM_ID;
   const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL;
   const logoUrl = process.env.NEXT_PUBLIC_LOGO;
+  const NEYNAR_CLIENT_ID = process.env.NEYNAR_CLIENT_ID;
 
   const config = {
     accountAssociation: {
       header:
-        "eyJmaWQiOjY4NjEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHhBNTkzMUE3MjZDRUNjYTA1N0EzRkY0M0E4NDg4MzQ2NjI2MDQ3OEI0In0",
-      payload: "eyJkb21haW4iOiJ5YXB5YXAuc3BhY2UifQ",
+        "eyJmaWQiOjY4NjEsInR5cGUiOiJhdXRoIiwia2V5IjoiMHg0QjVhMDdkODFlNmNhYTAyOGFCODYwM2ExZTZhOEM1YmE3OEE2OWJiIn0",
+      payload: "eyJkb21haW4iOiJ6ZWVyby5jb29sIn0",
       signature:
-        "MHhiYWM1NzlkYjZlOTZiMDAxMmZjMTdhOWRiYjIzNzNkZTk3ODM0MGU4YmNhNGEyN2VjNWI4MjgxMTczZjk5NzYyMjRkNjYzMjg0YzU2MzZlMGYzZWFiMTY2OGQwMmExN2Q3MTdmMTM0YjE3YWExZjNkYjU0OTcyYTZlMTg3NjgyMjFi",
+        "RZ+92uyf6e9g7PpkDn5Y/Zodi8rEc6j0c/dUPpNGgdFp/vAlF40C2+2HyJaJ7usr1WvgopzxnAT/IQqoI/4vCRs=",
     },
+
     frame: {
       version: "1",
       name: "Zeero",
       iconUrl: `${logoUrl}`,
       homeUrl: `${appUrl}`,
       imageUrl: `${imageUrl}`,
-      buttonTitle: "Start Creating",
+      description: "Share your videos and earn from them (zora)",
+      buttonTitle: "Start at Zeero",
       splashImageUrl: `${logoUrl}`,
       splashBackgroundColor: "#FFFFFF",
-      webhookUrl: `${appUrl}/api/webhook`,
+      webhookUrl: `https://api.neynar.com/f/app/${NEYNAR_CLIENT_ID}/event`,
     },
   };
 
