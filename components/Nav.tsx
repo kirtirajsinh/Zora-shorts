@@ -83,7 +83,7 @@ const Nav = () => {
           >
             <FireIcon isActive={pathname === "/trending"} />
           </button>
-          
+
           <button
             onClick={() => router.push("/zeero")}
             className={`px-3 py-2 text-lg font-bold rounded-lg transition-colors ${
@@ -105,7 +105,9 @@ const Nav = () => {
                 className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
               >
                 <div className="flex flex-col items-start">
-                  <span className="text-sm">{formatAddress(address as string)}</span>
+                  <span className="text-sm">
+                    {formatAddress(address as string)}
+                  </span>
                   <span className="text-xs text-gray-400">
                     {chain?.name || "Unknown Chain"}
                   </span>
@@ -124,7 +126,7 @@ const Nav = () => {
                         await switchChain({ chainId: base.id });
                         setIsDropdownOpen(false);
                       } catch (error) {
-                        console.error('Failed to switch to Base:', error);
+                        console.error("Failed to switch to Base:", error);
                       }
                     }}
                     className={`w-full px-4 py-2 text-left text-white hover:bg-gray-700 transition-colors flex items-center justify-between ${
@@ -142,7 +144,10 @@ const Nav = () => {
                         await switchChain({ chainId: baseSepolia.id });
                         setIsDropdownOpen(false);
                       } catch (error) {
-                        console.error('Failed to switch to Base Sepolia:', error);
+                        console.error(
+                          "Failed to switch to Base Sepolia:",
+                          error
+                        );
                       }
                     }}
                     className={`w-full px-4 py-2 text-left text-white hover:bg-gray-700 transition-colors flex items-center justify-between ${
@@ -154,7 +159,7 @@ const Nav = () => {
                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                     )}
                   </button>
-                  
+
                   {/* Logout option */}
                   <div className="border-t border-gray-700 mt-1">
                     <button
