@@ -40,9 +40,9 @@ export async function generateMetadata() {
         version: "next",
         imageUrl: `${imageUrl}`,
         button: {
-          title: "Start at Zeero",
+          title: "Start Zeero",
           action: {
-            type: "launch_frame",
+            type: "launch_miniapp",
             name: "zeero",
             url: `${appUrl}`,
             splashImageUrl: `${logoUrl}`,
