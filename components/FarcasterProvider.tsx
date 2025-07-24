@@ -28,14 +28,11 @@ function FarcasterProvider({ children }: PropsWithChildren) {
         console.log("Calling SDK ready");
         sdk.actions.ready();
 
-        const isMiniApp = await sdk.isInMiniApp();
-        setIsInMiniApp(isMiniApp);
-
         const miniAppUser = await sdk.context;
         console.log("SDK context:", miniAppUser);
 
         if (miniAppUser) {
-          setContext(miniAppUser);
+          console.log("Setting Mini App context", miniAppUser);
 
           if (miniAppUser?.user) {
             setUser({
