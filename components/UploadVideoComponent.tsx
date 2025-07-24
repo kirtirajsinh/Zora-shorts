@@ -5,7 +5,6 @@ import { useAccount, useWalletClient, usePublicClient } from "wagmi";
 import { toast } from "sonner";
 import { createCoin } from "@zoralabs/coins-sdk";
 import { ValidMetadataURI } from "@zoralabs/coins-sdk";
-import { platform } from "os";
 
 interface CoinFormData {
   name: string;
@@ -37,6 +36,7 @@ export const UploadVideoComponent = () => {
   const [videoError, setVideoError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +72,7 @@ export const UploadVideoComponent = () => {
       // Create preview URL
       const url = URL.createObjectURL(file);
       setVideoPreview(url);
+      setIsPlaying(false);
     },
     []
   );
@@ -145,7 +146,7 @@ export const UploadVideoComponent = () => {
       animation_url: videoUrl,
       properties: {
         creator: address || "Unknown",
-        category: "video",
+        category: "social",
         image_type: formData.coverImage?.type || "image/jpeg",
         platform: "Zeero",
         platform_url: "zeero.cool",
@@ -170,9 +171,7 @@ export const UploadVideoComponent = () => {
     return await uploadToR2(metadataFile);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!address || !walletClient || !publicClient) {
       toast.error("Please connect your wallet");
       return;
@@ -262,17 +261,27 @@ export const UploadVideoComponent = () => {
     imageInputRef.current?.click();
   };
 
+  const toggleVideoPlayback = () => {
+    if (videoPreviewRef.current) {
+      if (videoPreviewRef.current.paused) {
+        videoPreviewRef.current.play();
+        setIsPlaying(true);
+      } else {
+        videoPreviewRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
+
   if (!address) {
     return (
       <div className="h-full flex flex-col items-center justify-center px-6">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
-          <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-          </svg>
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-3 text-center">Connect Wallet</h2>
+        <h2 className="text-2xl font-bold text-white mb-3 text-center">
+          Connect Wallet
+        </h2>
         <p className="text-gray-400 text-center mb-6 max-w-xs">
-          Connect your wallet to start creating video coins and monetizing your content
+          Connect your wallet to start creating video coins and monetizing your
+          content
         </p>
         <div className="w-full max-w-xs px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-2xl">
           <p className="text-red-400 text-sm text-center font-medium">
@@ -289,61 +298,139 @@ export const UploadVideoComponent = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Create Reel</h2>
           <p className="text-gray-400">Share your video and mint a coin</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+          className="space-y-6"
+        >
           {/* Video Upload - Reel Style */}
           <div className="relative">
-            <div
-              onClick={handleVideoClick}
-              className="relative aspect-[9/16] bg-gray-900 rounded-3xl overflow-hidden cursor-pointer group"
-            >
+            <div className="relative aspect-[9/16] bg-gray-900 rounded-3xl overflow-hidden group">
               {videoPreview ? (
                 <div className="relative w-full h-full">
                   <video
                     ref={videoPreviewRef}
                     src={videoPreview}
                     className="w-full h-full object-cover"
-                    controls={false}
-                    preload="metadata"
-                    muted
+                    playsInline
                     loop
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const video = e.target as HTMLVideoElement;
-                      video.paused ? video.play() : video.pause();
-                    }}
+                    onEnded={() => setIsPlaying(false)}
                   />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-black/50 rounded-full p-3">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
+
+                  {/* Play/Pause Overlay */}
+                  <div
+                    className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                    onClick={toggleVideoPlayback}
+                  >
+                    <div
+                      className={`bg-black/50 rounded-full p-4 transition-opacity ${
+                        isPlaying
+                          ? "opacity-0 hover:opacity-100"
+                          : "opacity-100"
+                      }`}
+                    >
+                      {isPlaying ? (
+                        <svg
+                          className="w-12 h-12 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-12 h-12 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      )}
                     </div>
                   </div>
-                  <div className="absolute top-4 right-4 bg-black/50 rounded-full px-3 py-1">
-                    <span className="text-white text-xs font-medium">Tap to change</span>
-                  </div>
+
+                  {/* Change Video Button */}
+                  <button
+                    type="button"
+                    className="absolute top-4 right-4 bg-black/70 hover:bg-black/80 rounded-full px-4 py-2 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleVideoClick();
+                    }}
+                  >
+                    <span className="text-white text-sm font-medium">
+                      Change
+                    </span>
+                  </button>
                 </div>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-800/50 to-gray-900/50">
+                <div
+                  className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-800/50 to-gray-900/50 cursor-pointer"
+                  onClick={handleVideoClick}
+                >
                   <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-4">
-                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <svg
+                      className="w-10 h-10"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
                     </svg>
                   </div>
-                  <h3 className="text-white text-lg font-semibold mb-2">Add your video</h3>
+                  <h3 className="text-white text-lg font-semibold mb-2">
+                    Add your video
+                  </h3>
                   <p className="text-gray-300 text-center text-sm mb-3 px-6">
                     Upload a vertical video to create your reel
                   </p>
                   <div className="bg-white/10 rounded-full px-4 py-2">
-                    <span className="text-gray-300 text-xs">Max 100MB • MP4, MOV</span>
+                    <span className="text-gray-300 text-xs">
+                      Max 100MB • MP4, MOV
+                    </span>
                   </div>
                 </div>
               )}
@@ -364,7 +451,9 @@ export const UploadVideoComponent = () => {
 
           {/* Cover Image - Compact Style */}
           <div className="space-y-3">
-            <label className="text-white font-medium text-sm">Cover Image *</label>
+            <label className="text-white font-medium text-sm">
+              Cover Image *
+            </label>
             <div
               onClick={handleImageClick}
               className="relative aspect-[16/9] bg-gray-900 rounded-2xl overflow-hidden cursor-pointer group border-2 border-dashed border-gray-600"
@@ -378,19 +467,41 @@ export const UploadVideoComponent = () => {
                   />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="bg-black/50 rounded-full p-2">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      <svg
+                        className="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
                       </svg>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                  <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-8 h-8 mb-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   <p className="text-sm text-center">Add cover image</p>
-                  <p className="text-xs text-gray-500 mt-1">JPG, PNG • Max 10MB</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPG, PNG • Max 10MB
+                  </p>
                 </div>
               )}
               <input
@@ -427,7 +538,9 @@ export const UploadVideoComponent = () => {
           {/* Form Fields - Compact Mobile Style */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-white font-medium text-sm">Token Name *</label>
+              <label className="text-white font-medium text-sm">
+                Token Name *
+              </label>
               <input
                 type="text"
                 name="name"
@@ -454,7 +567,9 @@ export const UploadVideoComponent = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-white font-medium text-sm">Description</label>
+              <label className="text-white font-medium text-sm">
+                Description
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -466,7 +581,9 @@ export const UploadVideoComponent = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-white font-medium text-sm">Payout Address</label>
+              <label className="text-white font-medium text-sm">
+                Payout Address
+              </label>
               <input
                 type="text"
                 name="payoutRecipient"
@@ -485,7 +602,13 @@ export const UploadVideoComponent = () => {
           <div className="pt-4">
             <button
               type="submit"
-              disabled={isCreating || isUploading || !formData.video || !formData.name || !formData.symbol}
+              disabled={
+                isCreating ||
+                isUploading ||
+                !formData.video ||
+                !formData.name ||
+                !formData.symbol
+              }
               className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-2xl transition-all duration-300 text-lg shadow-lg"
             >
               {isUploading
